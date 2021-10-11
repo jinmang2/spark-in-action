@@ -784,13 +784,11 @@ rdd.aggregateByKey(zeroValue, new CustomPartitioner())(seqFunc, comboFunc).colle
 * 참고로 다른 그루핑 연산자(`aggregateByKey`,`reduceByKey`,  `foldByKey`, `groupByKey`)도 `combineByKey` 를 사용한다.
 
 * 우리가 계속 사용하던 `transByCust` 는 `고객 ID` 와 `구매 기록` 을 묶어서 키-값 형태로 저장했지만 데이터를 고객별로 그루핑 하지 않았다.
-* 
-
 * ```scala
   def createComb = (t:Array[String]) => { //결합 값을 생성하는 함수
-    val total = t(5).toDouble
-    val q = t(4).toInt
-    (total/q, total/q, total)
+    val total = t(5).toDouble // total은 구매금액
+    val q = t(4).toInt	// q 는 구매수량
+    (total/q, total/q, q, total) //(total/q) 은 상품 낱개 가격
   }
   
   
@@ -799,7 +797,7 @@ rdd.aggregateByKey(zeroValue, new CustomPartitioner())(seqFunc, comboFunc).colle
   { case((mn,mx,c,tot),t) => {
     val total = t(5).toDouble
     val q = t(4).toInt
-    (scala.math.min(mn, total/q), c+q, tot+total)
+    (scala.math.min(mn, total/q), scala.math.max(mx+total/q),c+q, tot+total) //구매수량과 구매 금액을 각각 결합해서 더함
   }}
   
   
@@ -810,6 +808,9 @@ rdd.aggregateByKey(zeroValue, new CustomPartitioner())(seqFunc, comboFunc).colle
   
   
   val avgByCust = transByCust.combineByKey(createComb, mergeVal, mergeComb, new  org.apache.spark.HashPartitioner(transByCust.partitions.size)).mapValues({case(mn,mx,cnt,tot,tot/cnt)}) //튜플에 상품의 평균 가격을 추가한다.
+  
+  avgByCust.first() //값 확인
+  
   ```
 
 
@@ -1040,6 +1041,15 @@ list.foreach(x=>acc.value) //예외발생
 * **셔플링**은 **파티션 간 물리적인 데이터 이동**을 의미한다. 셔플링은 **새로운 RDD 파티션을 만들려고 여러 파티션의 데이터를 합쳐야 할 때 발생** 한다.
 * **셔플링 횟수를 최소화하는 것** 이 성능향상의 지름길이다.
 * 파티션 단위로 동작하는 RDD 연산에는 **mapPartitions**와 **mapParitionsWithIndex**가 있다. 
+* 스파크의 조인 연산자는 이름이 같은 RDMBS 조인연산자와 동일 하게 동작한다.
+* `cogroup` 은 여러 RDD 값을 키로 그룹핑하고 각 RDD 의 키별 값을 담은 `Iterable` 객체를 생성한후, 이  `Iterable` 객체의 배열을 `Pair RDD` 값으로 반환한다.
+* `RDD` 의 테이터를 정렬하는데 `sortByKey` , `sortBy` , `repartitionAndSortWithPartition` 이있다.
+* 스파크에서는 다양한  `Pair RDD` 변환 연산자로 데이터를 그루핑 할 수 있다.
+* RDD 계보는 DAG 로 표현한다.
+* 스파크는 셔플링이 발생하는 지점을 기준으로 스파크 잡 하나를  stage 여럿으로 나눈다.
+* 체크포인팅으 `RDD` 계보를 저장할 수 있다.
+* 누적 변수로 스파크 프로그램을 **전역 상태**로 유지할  수 있다.
+* 공유 변수로 태스크 및 파티션이 공통으로 사용하는 데이터를 공유할 수 있다. 
 
 ## 참고 
 
@@ -1056,8 +1066,6 @@ list.foreach(x=>acc.value) //예외발생
     												// data를 8개의 파티션으로 나눔
     ```
   
-
-
 
 * Trait 이란?
 
