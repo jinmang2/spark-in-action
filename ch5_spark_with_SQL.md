@@ -371,8 +371,7 @@ rowRDD = itPostsRows.map(lambda x: stringToPost(x))
 - **SparkSession의 createDataFrame 메서드를 사용하는 것**
     - **Row 타입의 객체를 포함하는 RDD**와 **StrucType 객체를 인자로 전달해 호출**할 수 있다.
     - **StructType**은 스파크 SQL의 **테이블 스키마를 표현**하는 **클래스**
-    - StructType 객체는 테이블 칼럼을 표현하는 StructField객체를 한 개 또는 여러개 가질 수 있다.
-    - 
+    - StructType 객체는 테이블 칼럼을 표현하는 StructField객체를 한 개 또는 여러 개 가질 수 있다.
 
 ```scala
 import org.apache.spark.sql.types._
@@ -450,7 +449,7 @@ itPostsDFStruct.dtypes
         - **즉 DataFrame은 데이터를 직접 변경하지 못한다.**
         - 반드시 새로운 DataFrame으로 변환해야한다.
         - 대부분의 DataFrame DSL함수는 결과를 바로 반환하지 않는대신
-            - RDD 변환 연산자와 마찬가지로 새로운 DataFrame을반호나하면서 실제 연산은 **지연** 처리한다.
+            - RDD 변환 연산자와 마찬가지로 새로운 DataFrame을 반환하면서 실제 연산은 **지연** 처리한다.
     
 
 ### 5.1.2.1 칼럼선택
@@ -459,7 +458,7 @@ itPostsDFStruct.dtypes
 
 - DataFrame DSL함수는 **Column 객체를 입력 받을 수** 있다.
 - **특정 칼럼을 선택하는 select함수**는 **여러 칼럼 이름 또는 Column객체를 받고 이 칼럼만으로 구성된 새로운 DataFrame을 반환**한다.
-- implicits 객체의 symbolToColumn 메서드는 스칼라의 Symbol 클래스를 Columkn으로 변환한다.
+- implicits 객체의 symbolToColumn 메서드는 스칼라의 Symbol 클래스를 Column으로 변환한다.
 - 스칼라의 Symbol에는 interning개념이 적용되어있다.
     - interning
         - 객체의 인스턴스를 단 한개만 생성하는 기능
@@ -1250,7 +1249,7 @@ val stringDataSet = spark.read.text("path/to/file")**.as[String]**
 
 - 하이브를 지원하는 스파크에서도 임시로 테이블 정의를 저장할수 있다.
 - **createOrReplaceTempView**
-    - 하**이브 없어도 가**능
+    - **하이브 없어도 가능**
     - DataFrame을 임시 테이블로 등록할 수 있다.
 
 ```scala
