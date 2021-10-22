@@ -1222,9 +1222,9 @@ val stringDataSet = spark.read.text("path/to/file")**.as[String]**
 
 - 스파크 SQL
     - DataFrame DSL 기능을 SQL 명령에서도 사용할수 있었다
-    - 하지만 SQL 쓰는게 더 편라히다.
+    - 하지만 SQL 쓰는게 더 편리하다.
     - 스파크 SQL은 사용자가 작성한 SQL 명령을 DataFrame연산으로 변환한다.
-    - SQL 사용자들은 스파크의 Thrift 서버로 연결된 표준 JDBC 또는 ODBC 프로토콜로 자신이 사용 하던 일반 SQL 애플리케이션에서도 스파크에 접속할 수 있다.
+    - SQL 사용자들은 스파크의 Thrift 서버로 연결된 표준 JDBC 또는 ODBC 프로토콜로 자신이 사용하던 일반 SQL 애플리케이션에서도 스파크에 접속할 수 있다.
     - 스파크에서 지원하는 SQL언어
         - 스파크 전용 SQL
         - HQL(Hive Query Language)
@@ -1237,7 +1237,7 @@ val stringDataSet = spark.read.text("path/to/file")**.as[String]**
 - SQL 연산자는 테이블 칼럼 이름을 바탕으로 SQL연산을 수행한다.
 - DataFrame을 테이블로 등록해두면 스파크 SQL 쿼리에서는 등록된 이름으로 이 DataFrame을 참조할 수 있다.
 - **스파크**는 **사용자가 등록**한 **테이블 정보를 테이블 카탈로그에 저장**한다.
-- **하이브 지원 기능이 없**는 스파크에서는 테이블 카탈로그를 단순한 **in-memory Ma**p으로 구현한다.
+- **하이브 지원 기능이 없**는 스파크에서는 테이블 카탈로그를 단순한 **in-memory Map**으로 구현한다.
     - 등록된 테이블 정보만 드라이버 메모리에만 저장
     - 스파크 세션 종료시 사라진다.
 - 하이브 지원하는 **SparkSession**에서는 테이블 카탈로그가 하이브 meta-store를 기반으로 구현되었다.
@@ -1432,7 +1432,7 @@ $ spark-sql **-e** "**select** substring(title, 0, 70)
 ---
 
 - JDBC 클라이언트로 **thrift** 서버에 접속하는 방법
-- 예제에서는 오픈소스 자바 SQL 클라이넡인 Squirrel SQL을 사용하여 스파크의 Thrift 서버로 접속하는데 필요한 일반적인 단께와 설정 과정을 설명한다.
+- 예제에서는 오픈소스 자바 SQL 클라이넡인 Squirrel SQL을 사용하여 스파크의 Thrift 서버로 접속하는데 필요한 일반적인 단계와 설정 과정을 설명한다.
 - 다른 JDBC 클아이언트로 사용 가능
 
 - Squirrel SQL에서 Thrift 서버로 접속
@@ -1490,17 +1490,17 @@ $ spark-sql **-e** "**select** substring(title, 0, 70)
         - ORC는 각 데이터 타입에 특화된 Serializaer를 사용해 데이터를 더욱 효율적으로 저장할 수 있다.
         - Serializaer가 직렬화한 stripe 데이터는 Zlib또는 Snappy형식으로 압축된다.
 
-### 5.4.1.3 Parquet
+### 5.4.1.3 parquet를
 
 ---
 
-- Parquest
+- parquet
     - 포맷은 별개의 프로젝트로 개발됐다가 이후 하이브로 통합됐다.
     - Parquet도 칼럼형 파일 포맷이며 데이터를 압축할 수 있다.
     - 다만 칼럼별로 압축방식을 지정할 수 있다는 점에서 ORC와 다르다.
     - Parquet 중첩된 복합 데이터구조에 중점을 두고 설계되어서 ORC 파일 포멧보다 이러한 중첩구조의 데이터셋을 더 효율적으로 다룰 수 있다.
     - 각 칼럼의 chunk별로 최솟값, 최댓값의 통계를 저장해 쿼릴르 실행할때 일부 데이터를 건너뛸 수 있도록 연산들 최적화한다.
-    - 스파크는 Parquest기본 데이터 소스로 사용한다.
+    - 스파크는 parquet가 기본 데이터 소스로 사용한다.
 
 ## 5.4.2 데이터 저장
 
