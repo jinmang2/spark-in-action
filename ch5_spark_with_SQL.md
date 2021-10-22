@@ -689,8 +689,8 @@ postsDf.select(avg(postsDf.score), max(postsDf.score), count(postsDf.score)).sho
     4. toMax라는 칼럼을 추가하고 현재 처리하고 row score와 해당 사용자의 최고 score 간 차이를 계산하여 toMax 칼럼에 저장
 
 ```scala
-import org.apache.spark.sql.expressions.**Window**
-postsDf.**filter**('postTypeId === 1).**select**('**ownerUserId**, 'acceptedAnswerId, '**score**, **max**('score).**over**(Window.partitionBy('ownerUserId)) as "maxPerUser").**withColumn**("toMax", 'maxPerUser - 'score).**show**(10)
+import org.apache.spark.sql.expressions.Window
+postsDf.filter('postTypeId === 1).select('ownerUserId, 'acceptedAnswerId, 'score, max('score).over**(Window.partitionBy('ownerUserId)) as "maxPerUser").withColumn("toMax", 'maxPerUser - 'score).**show**(10)
 ```
 
 ```python
@@ -722,11 +722,11 @@ winDf.withColumn("toMax", winDf.maxPerUser - winDf.score).show(10)
     4. 전체 데이터셋을 질문자 ID와 질문 ID로 정렬한다.
 
 ```scala
-postsDf.**filter**('postTypeId === 1).**select**('**ownerUserId**, 'id, 'creationDate, lag('id, 1).over(Window.partitionBy('ownerUserId).orderBy('creationDate)) as "prev", lead('id, 1).over(Window.**partitionBy**('ownerUserId).orderBy('creationDate)) as "next").orderBy('ownerUserId, 'id).show()
+postsDf.filter('postTypeId === 1).select('ownerUserId, 'id, 'creationDate, lag('id, 1).over(Window.partitionBy('ownerUserId).orderBy('creationDate)) as "prev", lead('id, 1).over(Window.partitionBy**('ownerUserId).orderBy('creationDate)) as "next").orderBy('ownerUserId, 'id).show()
 ```
 
 ```python
-postsDf.**filter**(postsDf.postTypeId == 1).**select**(postsDf.ownerUserId, postsDf.id, postsDf.creationDate, **lag**(postsDf.id, 1).**over**(Window.**partitionBy**(postsDf.ownerUserId).**orderBy**(postsDf.creationDate)).alias("prev"), **lead**(postsDf.id, 1).over(Window.partitionBy(postsDf.ownerUserId).orderBy(postsDf.creationDate)).alias("next")).orderBy(postsDf.ownerUserId, postsDf.id).show()
+postsDf.filter(postsDf.postTypeId == 1).select(postsDf.ownerUserId, postsDf.id, postsDf.creationDate, lag(postsDf.id, 1).over(Window.partitionBy(postsDf.ownerUserId).orderBy(postsDf.creationDate)).alias("prev"), lead(postsDf.id, 1).over(Window.partitionBy(postsDf.ownerUserId).orderBy(postsDf.creationDate)).alias("next")).orderBy(postsDf.ownerUserId, postsDf.id).show()
 # +-----------+----+--------------------+----+----+
 # |ownerUserId|  id|        creationDate|prev|next|
 # +-----------+----+--------------------+----+----+
@@ -769,14 +769,14 @@ postsDf.**filter**(postsDf.postTypeId == 1).**select**(postsDf.ownerUserId, post
     - **한 문자열 내 특정 문자열이 발견된 횟수를 계산**
 
 ```scala
-val countTags = **udf**((tags: String) => **"&lt**;"**.r**.**findAllMatchIn**(**tags**).**length**)
-// val countTags = spark.**udf**.**register**("countTags", (tags: String) => "&lt;".r.**findAllMatchIn**(tags).length)
-// 위 **r**.**findAllMatchIn**(**tags) 정규표현식과 같은 역할을 한다.**
-postsDf.**filter**('postTypeId === 1).**select**('tags, countTags('tags) as "tagCnt").show(10, false)
+val countTags = udf((tags: String) => "&lt;".r.findAllMatchIn(tags).length)
+// val countTags = spark.udf.register("countTags", (tags: String) => "&lt;".r.findAllMatchIn(tags).length)
+// 위 r.findAllMatchIn(tags) 정규표현식과 같은 역할을 한다
+postsDf.filter('postTypeId === 1).select('tags, countTags('tags) as "tagCnt").show(10, false)
 ```
 
 ```python
-countTags = **udf**(lambda (tags): **tags**.count("&lt;"), **IntegerType**())
+countTags = udf(lambda (tags): tags.count("&lt;"), IntegerType())
 postsDf.filter(postsDf.postTypeId == 1).select("tags", countTags(postsDf.tags).alias("tagCnt")).show(10, False)
 # +-------------------------------------------------------------------+------+
 # |tags                                                               |tagCnt|
@@ -810,26 +810,26 @@ postsDf.filter(postsDf.postTypeId == 1).select("tags", countTags(postsDf.tags).a
 
 ```scala
 // null, Nana값을 가진 모든 row DataFrame에서 제외
-val **cleanPosts** = postsDf.**na**.**drop**()
-// val **cleanPosts** = postsDf.**na**.**drop**("any") 와 동일 any는 어떤 컬럼이든 null을 발견하면 해당 row 제외
-// val **cleanPosts** = postsDf.**na**.**drop**("all") **모든 컬럼이 null인 row만 제외**
-**cleanPosts**.**count**()
+val cleanPost* = postsDf.na.drop()
+// val cleanPosts = postsDf.na.drop("any") 와 동일 any는 어떤 컬럼이든 null을 발견하면 해당 row 제외
+// val cleanPosts = postsDf.na.drop("all") 모든 컬럼이 null인 row만 제외
+cleanPosts.count()
 
-postsDf.**na**.**fill**(Map("viewCount" -> 0)
+postsDf.na.fill(Map("viewCount" -> 0)
 // null 값을 0으로 채운다.
 
-val **postsDfCorrected** = **postsDf**.**na**.**replace**(**Array**("id", "acceptedAnswerId"), **Map**(1177 -> 3000))
+val postsDfCorrected = postsDf.na.replace(Array("id", "acceptedAnswerId"), Map(1177 -> 3000))
 // replace함수를 이용 특정값을 다른 값으로 치환한다.
 // 1177 번 데이터를 3000번으로 정정
 ```
 
 ```python
-cleanPosts = postsDf.**na**.**drop**()
-cleanPosts.**count**()
+cleanPosts = postsDf.na.drop()
+cleanPosts.count()
 
-postsDf.**na**.**fill**({"viewCount": 0}).show()
+postsDf.na.fill({"viewCount": 0}).show()
 
-postsDf.na.**replace**(1177, 3000, ["id", "acceptedAnswerId"]).show()
+postsDf.na.replace(1177, 3000, ["id", "acceptedAnswerId"]).show()
 ```
 
 ## 5.1.5 DataFrame을 RDD로 변환
@@ -861,7 +861,7 @@ postsRdd = postsDf.rdd
     - 하지만 **타입 변경한 RDD**를 **다시 DataFrame**으로 **변환하는 과정**은 **자동화 할수 없다.**
 
 - 예제
-    - body 칼럼과 tag칼럼에 포함된 이스케이프 문자**(&lt;, &gt,**) 문자열을 각각 <> 문자로 변경
+    - body 칼럼과 tag칼럼에 포함된 이스케이프 문자(&lt;, &gt,) 문자열을 각각 <> 문자로 변경
     1. 각 row를 Seq객체로 매핑
     2. Seq객체의 updated 메서드를 사용해 Seq 요솟값을 변경
     3. updated 결과로 변환된 Seq를 다시 Row 객체로 매핑
@@ -869,19 +869,19 @@ postsRdd = postsDf.rdd
 
 ```scala
 
-val postsMapped = postsDf.**rdd**.**map**(row => Row.**fromSeq**(
-  row.**toSeq**.**updated**(3, row.getString(3).replace(**"&lt;","<"**).replace(**"&gt;",">")**).
-    updated(8, row.getString(8).**replace**("&lt;","<").**replace**("&gt;",">"))))
+val postsMapped = postsDf.rdd.map(row => Row.fromSeq(
+  row.toSeq.updated(3, row.getString(3).replace("&lt;","<").replace("&gt;",">")).
+    updated(8, row.getString(8).replace("&lt;","<").replace("&gt;",">"))))
 // 1~3번 과정
 
-val **postsDfNew** = **spark**.**createDataFrame**(postsMapped, postsDf.**schema**)
+val **postsDfNew** = **spark**.**createDataFrame**(postsMapped, postsDf.schema)
 // 새 DataFrame 생성
 ```
 
 ```python
 postsRdd = postsDf.rdd
 
-def replaceLtGt(**row**):
+def replaceLtGt(row):
 	return Row(
 	  commentCount = row.commentCount,
     lastActivityDate = row.lastActivityDate,
@@ -898,7 +898,7 @@ def replaceLtGt(**row**):
     id = row.id)
 
 # Q 인자없이 넘기는 것
-**postsMapped** = **postsRdd**.map(**replaceLtGt**)
+postsMapped = postsRdd.map(replaceLtGt)
 
 def sortSchema(schema):
 	fields = {f.name: f for f in schema.fields}
@@ -925,13 +925,13 @@ postsDfNew = sqlContext.**createDataFrame**(postsMapped, sortSchema(postsDf.sche
     - 각 집계함수는 **groupBy** 지정한 칼럼들과 **집계 결과를 저장한 추가 칼럼으로 구성된 DataFrame을 반환**한다.
 
 ```scala
-postsDfNew.**groupBy**('ownerUserId, 'tags, 'postTypeId)
-.**count**.**orderBy**('ownerUserId desc).show(10)
+postsDfNew.groupBy('ownerUserId, 'tags, 'postTypeId)
+.count.orderBy('ownerUserId desc).show(10)
 ```
 
 ```python
-postsDfNew.**groupBy**(postsDfNew.ownerUserId, postsDfNew.**tags**, 
-									 postsDfNew.postTypeId).**count**()
+postsDfNew.groupBy(postsDfNew.ownerUserId, postsDfNew.tags, 
+									 postsDfNew.postTypeId).count**()
 									 .orderBy(postsDfNew.ownerUserId.**desc**()).show(10)
 #+-----------+--------------------+----------+-----+
 #|ownerUserId|                tags|postTypeId|count|
@@ -955,7 +955,7 @@ postsDfNew.**groupBy**(postsDfNew.ownerUserId, postsDfNew.**tags**,
     - 사용자별로 **마지막으로 포스트를 수정한 날짜와 최고 점수를 산출하는 표현식**
 
 ```scala
-postsDfNew.groupBy('ownerUserId).agg(max('lastActivityDate), **max**('score)).show(10)
+postsDfNew.groupBy('ownerUserId).agg(max('lastActivityDate), max('score)).show(10)
 postsDfNew.groupBy('ownerUserId).agg(Map("lastActivityDate" -> "max", "score" -> "max")).show(10)
 
 ```
@@ -980,7 +980,7 @@ postsDfNew.groupBy(postsDfNew.ownerUserId).agg({"lastActivityDate": "max", "scor
 ```
 
 ```scala
-postsDfNew.groupBy('ownerUserId).agg(max('lastActivityDate), max('score).**gt**(5)).show(10)
+postsDfNew.groupBy('ownerUserId).agg(max('lastActivityDate), max('score).gt(5)).show(10)
 // gt == great than or greater?
 ```
 
@@ -1034,8 +1034,8 @@ smplDf.groupBy('ownerUserId, 'tags, 'postTypeId).**count**.show()
 ```
 
 ```python
-smplDf = **postsDfNew**.where((postsDfNew.ownerUserId >= 13) & (postsDfNew.ownerUserId <= 15))
-smplDf.**groupBy**(smplDf.ownerUserId, smplDf.tags, smplDf.postTypeId).count().show()
+smplDf = postsDfNew.where((postsDfNew.ownerUserId >= 13) & (postsDfNew.ownerUserId <= 15))
+smplDf.groupBy(smplDf.ownerUserId, smplDf.tags, smplDf.postTypeId).count().show()
 **# +-----------+----+----------+-----+
 # |ownerUserId|tags|postTypeId|count|
 # +-----------+----+----------+-----+
@@ -1047,7 +1047,7 @@ smplDf.**groupBy**(smplDf.ownerUserId, smplDf.tags, smplDf.postTypeId).count().s
 ```
 
 ```scala
-smplDf.**rollup**('ownerUserId, 'tags, 'postTypeId).count.show()
+smplDf.rollup('ownerUserId, 'tags, 'postTypeId).count.show()
 /*
 # +-----------+----+----------+-----+
 # |ownerUserId|tags|postTypeId|count|
@@ -1066,7 +1066,7 @@ smplDf.**rollup**('ownerUserId, 'tags, 'postTypeId).count.show()
 */
 // 순열
 
-smplDf.**cube**('ownerUserId, 'tags, 'postTypeId).count.show()
+smplDf.cube('ownerUserId, 'tags, 'postTypeId).count.show()
 // 조합
 /*
 # +-----------+----+----------+-----+
@@ -1094,7 +1094,7 @@ smplDf.**cube**('ownerUserId, 'tags, 'postTypeId).count.show()
 ```
 
 ```python
-smplDf.**rollup**(smplDf.ownerUserId, smplDf.tags, smplDf.postTypeId).count().show()
+smplDf.rollup(smplDf.ownerUserId, smplDf.tags, smplDf.postTypeId).count().show()
 # +-----------+----+----------+-----+
 # |ownerUserId|tags|postTypeId|count|
 # +-----------+----+----------+-----+
@@ -1154,7 +1154,7 @@ smplDf.cube(smplDf.ownerUserId, smplDf.tags, smplDf.postTypeId).count().show()
     - intalianVotes.csv 로드 및 DataFrame을 변환
 
 ```scala
-val itVotesRaw = sc.**textFile**("first-edition/ch05/italianVotes.csv").map**(**x => x.split("~"))
+val itVotesRaw = sc.textFile("first-edition/ch05/italianVotes.csv").map(x => x.split("~"))
 val itVotesRows = itVotesRaw.map(row => Row(row(0).toLong, row(1).toLong, row(2).toInt, Timestamp.valueOf(row(3))))
 val votesSchema = StructType(Seq(
   StructField("id", LongType, false),
@@ -1166,7 +1166,7 @@ val **votesDf** = spark.**createDataFrame**(itVotesRows, votesSchema)
 ```
 
 ```python
-itVotesRaw = sc.**textFile**("first-edition/ch05/italianVotes.csv").map(lambda x: x.split("~"))
+itVotesRaw = sc.textFile("first-edition/ch05/italianVotes.csv").map(lambda x: x.split("~"))
 itVotesRows = itVotesRaw.map(lambda row: Row(id=long(row[0]), postId=long(row[1]), voteTypeId=int(row[2]), creationDate=datetime.strptime(row[3], "%Y-%m-%d %H:%M:%S.%f")))
 votesSchema = StructType([
   StructField("creationDate", TimestampType(), False),
@@ -1175,22 +1175,22 @@ votesSchema = StructType([
   StructField("voteTypeId", IntegerType(), False)
   ])  
 
-**votesDf** = sqlContext.**createDataFrame**(itVotesRows, votesSchema)
+votesDf = sqlContext.createDataFrame(itVotesRows, votesSchema)
 ```
 
 - PostID 칼럼을 기준으로 두 DataFrame을 조인할 수 있다.
 
 ```scala
 // inner 조인
-val postsVotes = postsDf.**join**(votesDf, postsDf("id") === votesDf("postId"))
+val postsVotes = postsDf.join(votesDf, postsDf("id") === votesDf("postId"))
 
 // outer 조인
-val postsVotesOuter = postsDf.**join**(votesDf, postsDf("id") === votesDf("postId"), "outer")
+val postsVotesOuter = postsDf.join(votesDf, postsDf("id") === votesDf("postId"), "outer")
 ```
 
 ```python
-postsVotes = postsDf.**join**(votesDf, postsDf.id == votesDf.postId)
-postsVotesOuter = postsDf.**join**(votesDf, postsDf.id == votesDf.postId, "outer")
+postsVotes = postsDf.join(votesDf, postsDf.id == votesDf.postId)
+postsVotesOuter = postsDf.join(votesDf, postsDf.id == votesDf.postId, "outer")
 ```
 
 - postsVotesOuter  DataFrame 일부 row의 votes 칼럼에 null값이 포함
@@ -1279,8 +1279,8 @@ postsDf.write.format("json").saveAsTable("postsjson")
 - 5.4.2에서 mode 전달 값 자세히 설명
 
 ```scala
-**postsDf**.write.**mode**("**overwrite**").saveAsTable("posts")
-**votesDf**.write.**mode**("overwrite").saveAsTable("votes")
+postsDf.write.mode("overwrite").saveAsTable("posts")
+votesDf.write.mode("overwrite").saveAsTable("votes")
 ```
 
 ### 5.3.1.3 스파크 테이블 카탈로그
@@ -1292,7 +1292,7 @@ postsDf.write.format("json").saveAsTable("postsjson")
     - cacheTable, uncacheTable, isCached, clearCache 메서드를 사용하여 테이블을 메모리에 캐시하거나 삭제할 수 있다.
 
 ```scala
-**spark.catalog.listTables().show()
+spark.catalog.listTables().show()
 /*
 +----------+--------+-----------+---------+-----------+
 | name|database|description|tableType|isTemporary|
@@ -1301,14 +1301,14 @@ postsDf.write.format("json").saveAsTable("postsjson")
 | votes| default| null| MANAGED| false                |
 |posts_temp| null| null|TEMPORARY| true               |
 +----------+--------+-----------+---------+-----------+
-*/**
+*/
 
 ```
 
 ```scala
 
 spark.catalog.listColumns("votes").show()
-spark.catalog.**listFunctions**.show()
+spark.catalog.listFunctions.show()
 // SQL 함수 목록 조회
 ```
 
@@ -1445,7 +1445,7 @@ $ spark-sql -e "select substring(title, 0, 70)
 
 - 스파크는 다양한 기본 파일 포맷 및 데이터 베이스를 지원한다.
 - JDBC와 하이브를 비롯해 JSON, ORC, Parquet 파일 포맷 등이 해당한다.
-- 스파크는 MySQL 및 PostfreSQL 고나계형 데이터 베이스와 스파크를 연동하는 Dialect 클래스를 제공
+- 스파크는 MySQL 및 PostfreSQL 관계형 데이터 베이스와 스파크를 연동하는 Dialect 클래스를 제공
     - **Dialect 클래스**
         - JDBC의 JdbcType 클래스와 스파크 SQL의 DataType 클래스를 매핑하는 클래스 제공
 - 데이터 소스는 플러그인을 사용해 확장할 수 있다.
@@ -1499,7 +1499,7 @@ $ spark-sql -e "select substring(title, 0, 70)
     - Parquet도 칼럼형 파일 포맷이며 데이터를 압축할 수 있다.
     - 다만 칼럼별로 압축방식을 지정할 수 있다는 점에서 ORC와 다르다.
     - Parquet 중첩된 복합 데이터구조에 중점을 두고 설계되어서 ORC 파일 포멧보다 이러한 중첩구조의 데이터셋을 더 효율적으로 다룰 수 있다.
-    - 각 칼럼의 chunk별로 최솟값, 최댓값의 통계를 저장해 쿼릴르 실행할때 일부 데이터를 건너뛸 수 있도록 연산들 최적화한다.
+    - 각 칼럼의 chunk별로 최솟값, 최댓값의 통계를 저장해 쿼리를 실행할때 일부 데이터를 건너뛸 수 있도록 연산들 최적화한다.
     - 스파크는 parquet가 기본 데이터 소스로 사용한다.
 
 ## 5.4.2 데이터 저장
@@ -1548,7 +1548,7 @@ $ spark-sql -e "select substring(title, 0, 70)
 
 - saveAsTable 메서드는 데이터를 하이브 테이블에 저장
 - 테이블을 하이브 meta-store에 등록한다.
-- 하이브 미지원 스파크는 saveAsTable로 저장한 DataFrame을 임시 테이블에 등ㄺ한다.
+- 하이브 미지원 스파크는 saveAsTable로 저장한 DataFrame을 임시 테이블에 등록한다.
 - saveAsTable에는 오직 테이블 이름만 인수로 전달 가능
 - 지정된 이름의 테이블이 이미 있다면 mode 메서드에 전달한 매개변수 값이 이에 대응할 행동을 결정한다.
     - 기본값은 error
@@ -1591,7 +1591,7 @@ scala> sql("select * from postsjosn")
 ---
 
 - DataFrameWriter
-    - 데이터를 기본 데이터 소스(json, orc, parquest)로 저장하는 단축 메서드를 제공한다.
+    - 데이터를 기본 데이터 소스(json, orc, parquet)로 저장하는 단축 메서드를 제공한다.
     - 각 단축 메서드는 내부적으로 먼저 해당 데이터 소스 이름으로 format을 호출한 후 사용자가 입력한 경로를 save메서드에 전달한다.
     - 단축 메서드들을 하이브 meta-store를 활용하지 않는다.
 
@@ -1711,7 +1711,7 @@ val resParq = sql("select * from postsParquet")
 
 - DataFrame의 explain 메서드를 사용해 최적화 결과를 확인하고 실행 계획을 검토할 수 있다.
 
-- 점수당 조 35점 미만인 포스트를 필터링한 표현식
+- 점수당 35점 미만인 포스트를 필터링한 표현식
 
 ```scala
 val postsFiltered = postsDf.**filter**('postTypeId === 1).withColumn("ratio", 'viewCount / 'score).where('ratio < 35)
@@ -1770,7 +1770,7 @@ postsFiltered.**explain**(**true**)
             - 이진수로 인코딩한 객체를 JVM이 관리하는 대규모 long 배열에 저장한다.
             - 이진수로 인코딩된 객체는 **자바 객체보다 훨씬 더 적은 메모리를 차지**한다.
             - 객체를 Long 배열에 저장함으로써 가비지 컬렉션을 크게 줄일 수 있다.
-    - 텅스텐 프로젝트는 스파크의 셔플링 성능 또한 상당 부분 개선했다ㅏ.
+    - 텅스텐 프로젝트는 스파크의 셔플링 성능 또한 상당 부분 개선했다.
     - 정렬기반 셔플링이지만 이진 인코딩을 활용한다.
 
 # 5.7 요약
