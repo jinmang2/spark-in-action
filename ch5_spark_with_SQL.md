@@ -1265,8 +1265,8 @@ postsDf.createOrReplaceTempView("posts_temp")
 - 영구 테이블은 DataFrame의 write 메서드로 등록한다.
 
 ```scala
-**postsDf**.write.saveAsTable("posts")
-**votesDf**.write.saveAsTable("votes")
+postsDf.write.saveAsTable("posts")
+votesDf.write.saveAsTable("votes")
 ```
 
 ```python
@@ -1378,20 +1378,20 @@ val resultDf = sql("select * from posts")
     - spark-sql **-e** 인수를 사용해 스파크 SQL쉘을 들어가지 않고도 SQL쿼리를 실행할 수 있다.
 
 ```scala
-spark-sql> **select** substring(title, 0, 70) 
-					 **from** posts **where** postTypeId = 1 
-					 **order by** creationDate **desc** limit 3;
+spark-sql> select substring(title, 0, 70) 
+					 from posts where postTypeId = 1 
+					 order by creationDate desc limit 3;
 
-$ spark-sql **-e** "**select** substring(title, 0, 70) 
-								**from** posts **where** postTypeId = 1 
-								**order by** creationDate **desc** limit 3"
+$ spark-sql -e "select substring(title, 0, 70) 
+								from posts where postTypeId = 1 
+								order by creationDate desc limit 3"
 ```
 
 ## 5.3.3 Thrift서버로 스파크 SQL 접속
 
 ---
 
-- 스파크 프로그래멩서 직접 쿼리 실행 또는 SQL 쉘 쿼리 입력 외에 방법
+- 스파크 프로그래밍에서 직접 쿼리 실행 또는 SQL 쉘 쿼리 입력 외에 방법
 - Thrift
     - JDBC(ODBC)서버를 이용하여 원격지에서 SQL명령을 실행할수 있다.
     - JDBC
@@ -1400,7 +1400,7 @@ $ spark-sql **-e** "**select** substring(title, 0, 70)
         - Thirft 서버
             - JDBC, ODBC 접속을 받아 사용자의 쿼리를 스파크 SQL 세션으로 실행하는 스파크 애플리케이션
             - Thirft 서버 또한 스파크 클러스터에서 구동한다.
-        - Thirft 서버로 전라된 SQL 쿼리는 DataFrame으로 변환한 후 최종적으로 RDD연산으로 변환해 실행
+        - Thirft 서버로 전달된 SQL 쿼리는 DataFrame으로 변환한 후 최종적으로 RDD연산으로 변환해 실행
         - 실행결과는 다시 JDBC 프로토콜로 반환된다.
         - **쿼리가 참조하는 DataFrame은 Thirft 서버가 사용하는 하이브 meta-store에 미리 영구적으로 등록해야한다.**
 
@@ -1433,7 +1433,7 @@ $ spark-sql **-e** "**select** substring(title, 0, 70)
 
 - JDBC 클라이언트로 **thrift** 서버에 접속하는 방법
 - 예제에서는 오픈소스 자바 SQL 클라이넡인 Squirrel SQL을 사용하여 스파크의 Thrift 서버로 접속하는데 필요한 일반적인 단계와 설정 과정을 설명한다.
-- 다른 JDBC 클아이언트로 사용 가능
+- 다른 JDBC 클라이언트로 사용 가능
 
 - Squirrel SQL에서 Thrift 서버로 접속
 - 하이브 driver, alias정의해야한다.
@@ -1465,7 +1465,7 @@ $ spark-sql **-e** "**select** substring(title, 0, 70)
 - 스파크는 JSON 스키마를 자동으로 유추할 수 있기에 외부 시스템과 데이터를 주고받은 포멧으로 적합하다.
 - 하지만 영구적으로 저장하기에는 저장 효율이 떨어진다.
 - JSON의 장점
-    - 포맷이 간단하고 사용이 간편하며 살밍 읽을 수 있는 형태로 데이터를 저장한다.
+    - 포맷이 간단하고 사용이 간편하며  읽을 수 있는 형태로 데이터를 저장한다.
 
 ### 5.4.1.2 ORC
 
@@ -1692,7 +1692,7 @@ val resParq = sql("select * from postsParquet")
 - 그림 5-5
     - 카탈리스트 엔진을 최적화하는 과정 전반을 도식화 한것
     1. 카탈리스트는 먼저 DSL 및 SQL 표현식에서 **파싱 완료된 논리 실행 계획**(parsed logical plan)을 **생성**한다.
-    2. 쿼리가 참조하는 테**이블 이름, 칼럼 이름, 클래스 고유 이름**(qualified name) 등 **존재 여부 검사**
+    2. 쿼리가 참조하는 **테이블 이름, 칼럼 이름, 클래스 고유 이름**(qualified name) 등 **존재 여부 검사**
     3. 분석완료된 **논리 실행계획(analyzed logical plan)을 생성**한다.
     4. **카탈리스트**는 **하위 레벨 연산을 재배치하거나 결합하는 등 여러 방법으로 실행 계획의 최적화를 시도**한다.
     5. **최적화 단계**를 완료하면 **최적화된 논리 실행 계획을 생**성(optimized logical plan)한다.
@@ -1711,7 +1711,7 @@ val resParq = sql("select * from postsParquet")
 
 - DataFrame의 explain 메서드를 사용해 최적화 결과를 확인하고 실행 계획을 검토할 수 있다.
 
-- 점수당 조회숫 35점 미만인 포스트를 필터링한 표현식
+- 점수당 조 35점 미만인 포스트를 필터링한 표현식
 
 ```scala
 val postsFiltered = postsDf.**filter**('postTypeId === 1).withColumn("ratio", 'viewCount / 'score).where('ratio < 35)
@@ -1781,8 +1781,8 @@ postsFiltered.**explain**(**true**)
 - DataFrame은 현재 스파크의 가장 주요한 기능 중 하나이며 스파크 SQL을 가장 활발한 스파크 컴포넌트로 만든 원동력이다.
 - DataFrame은 기존 RDD를변환하거나 SQL 쿼리를 실행하거나 외부 데이터를 로드해 생성할 수 있다.
 - DataFrame DSL함수를사용해 데이터를 선택, 필터링, 그루핑, 조인할 수 있다.
-- DataFrame은 스칼라 함수, 집계 함수, 왼도 함수, 사용자 정의함수로 지원한다.
-- DataFrame의 na 필드로 제공하는 DataFrameNaFunctions 클래스는 데이터 셋의 결측 ㄱ밧을 적절하게 처리할 수 있다.
+- DataFrame은 스칼라 함수, 집계 함수, 윈도우 함수, 사용자 정의함수로 지원한다.
+- DataFrame의 na 필드로 제공하는 DataFrameNaFunctions 클래스는 데이터 셋의 결측 값을 적절하게 처리할 수 있다.
 - 스파크 SQL의 매개변수는 별도의 메서드로 설정한다.
 - Dataset은 DataFrame과 유사한 실험적 기능으로 범용 Row 컨테이너 대신 일반 자바 객체를 저장할 수 있다.
 - DataFrame을 임시 테이블로 등록하거나 하이브 meta-store에 영구 저장할 수 있다.
@@ -1794,7 +1794,7 @@ postsFiltered.**explain**(**true**)
 - 스파크는 JSON, ORC, Parquet, JDBC 등을 기본 데이터 소스로 지원한다.
 그 외 데이터 소스들은 third-party plug-in을 내려받아 사용할 수 있다.
 - DataFrame의 두뇌라고 할 수 있는 카탈리스트 엔진은 논리 실행 계획을 최적화하고 물리 실행 계획을 생성한다.
-- 텅스텐 프로젝트는 캐시 친화적인 객체 이진 인코딩과 온-힙 할당 및 오프-힙 할당, 텅스텐 셔플링 매니저를 이요해 스파크 성능을 다방면으로개선했다.
+- 텅스텐 프로젝트는 캐시 친화적인 객체 이진 인코딩과 온-힙 할당 및 오프-힙 할당, 텅스텐 셔플링 매니저를 이용해 스파크 성능을 다방면으로개선했다.
 
 > 출처 및 참고
 > 
