@@ -160,10 +160,10 @@ itPostsSplit = itPostsRows.map(**lambda** x: x.split("~"))
 
 ```scala
 val itPostsRDD = itPostsSplit.map(x => (x(0),x(1),x(2),x(3),x(4),x(5),x(6),x(7),x(8),x(9),x(10),x(11),x(12)))
-val **itPostsDFrame** = itPostsRDD.**toDF**()
-**itPostsDFrame**.show(10)
+val itPostsDFrame = itPostsRDD.toDF()
+itPostsDFrame.show(10)
 
-val itPostsDF = itPostsRDD.**toDF**("commentCount", "lastActivityDate", "ownerUserId", "body", "score", "creationDate", "viewCount", "title", "tags", "answerCount", "acceptedAnswerId", "postTypeId", "id")
+val itPostsDF = itPostsRDD.toDF("commentCount", "lastActivityDate", "ownerUserId", "body", "score", "creationDate", "viewCount", "title", "tags", "answerCount", "acceptedAnswerId", "postTypeId", "id")
 **// 칼럼에 이름 전달하는 방식, 인자로 칼럼명을 넣어준다.
 
 itPostsDF.printSchema
@@ -173,7 +173,7 @@ itPostsDF.printSchema
 ```python
 itPostsRDD = itPostsSplit.map(lambda x: (x[0],x[1],x[2],x[3],x[4],x[5],x[6],x[7],x[8],x[9],x[10],x[11],x[12]))
 itPostsDFrame = itPostsRDD.toDF()
-**itPostsDFrame**.show(10)
+**itPostsDFrame.show(10)
 
 # +---+--------------------+---+--------------------+---+--------------------+----+--------------------+--------------------+----+----+---+----+
 # | _1|                  _2| _3|                  _4| _5|                  _6|  _7|                  _8|                  _9| _10| _11|_12| _13|
@@ -191,8 +191,8 @@ itPostsDFrame = itPostsRDD.toDF()
 # +---+--------------------+---+--------------------+---+--------------------+----+--------------------+--------------------+----+----+---+----+
 # only showing top 10 rows
 
-itPostsDF = itPostsRDD.**toDF**(["commentCount", "lastActivityDate", "ownerUserId", "body", "score", "creationDate", "viewCount", "title", "tags", "answerCount", "acceptedAnswerId", "postTypeId", "id"])
-# **칼럼에 이름 전달하는 방식, 인자로 칼럼명을 넣어준다.**
+itPostsDF = itPostsRDD.toDF(["commentCount", "lastActivityDate", "ownerUserId", "body", "score", "creationDate", "viewCount", "title", "tags", "answerCount", "acceptedAnswerId", "postTypeId", "id"])
+# 칼럼에 이름 전달하는 방식, 인자로 칼럼명을 넣어준다.
 itPostsDF.printSchema()
 # root
 #  |-- commentCount: string (nullable = true)
@@ -223,17 +223,17 @@ itPostsDF.printSchema()
 
 ```scala
 //  변환에 앞서 RDD를 데이터를 저장할 **케이스 클래스 정의**
-import java.sql.**Timestamp**
-**case class Post** (commentCount:Option[Int], lastActivityDate:Option[java.sql.Timestamp],
+import java.sql.Timestamp
+case class Post (commentCount:Option[Int], lastActivityDate:Option[java.sql.Timestamp],
   ownerUserId:Option[Long], body:String, score:Option[Int], creationDate:Option[java.sql.Timestamp],
   viewCount:Option[Int], title:String, tags:String, answerCount:Option[Int],
   acceptedAnswerId:Option[Long], postTypeId:Option[Long], id:Long)
 ```
 
 ```python
-from pyspark.sql import **Row**
-from datetime import **datetime**
-def **toIntSafe**(inval):
+from pyspark.sql import Row
+from datetime import datetime
+def toIntSafe(inval):
   try:
     return int(inval)
   except ValueError:
@@ -275,12 +275,12 @@ def stringToPost(row):
 - itPostRDD row를 Post객체로 매핑하기 전에 아래와 같이 implict 클래스를 정의하면 코드를 더 깔끔하게 작성 가능하다.
 
 ```scala
-object **StringImplicits** {
-   implicit class **StringImprovements**(val s: String) {
+object StringImplicits {
+   implicit class StringImprovements(val s: String) {
       import scala.util.control.Exception.catching
-      def **toIntSafe** = catching(**classOf**[NumberFormatException]) opt s.**toInt**
-      def **toLongSafe** = catching(classOf[NumberFormatException]) opt s.**toLong**
-      def **toTimestampSafe** = **catching**(classOf[IllegalArgumentException]) opt Timestamp.valueOf(s)
+      def toIntSafe = catching(classOf[NumberFormatException]) opt s.toInt
+      def toLongSafe = catching(classOf[NumberFormatException]) opt s.toLong
+      def toTimestampSafe = catching(classOf[IllegalArgumentException]) opt Timestamp.valueOf(s)
    }
 }
 ```
@@ -341,7 +341,7 @@ itPostsDFCase.printSchema
 ```
 
 ```python
-def **stringToPost**(row):
+def stringToPost(row):
   r = row.encode('utf8').split("~")
   return Row(
     toIntSafe(r[0]),
@@ -417,7 +417,7 @@ postSchema = StructType([
   ])
 
 rowRDD = itPostsRows.map(lambda x: stringToPost(x))
-**itPostsDFStruct** = **sqlContext**.**createDataFrame**(rowRDD, postSchema)
+itPostsDFStruct = sqlContext.createDataFrame(rowRDD, postSchema)
 itPostsDFStruct.printSchema()
 itPostsDFStruct.columns
 itPostsDFStruct.dtypes
@@ -430,12 +430,12 @@ itPostsDFStruct.dtypes
 - printSchema 메서드 사용 서로 다른 방식으로 생성한 **itPostDFStruct**와 **itPostDFCase** 스키마가 동일한지 확인
 
 ```scala
-**itPostsDFCase**.**columns**
-itPostsDFStruct.**dtypes**
+itPostsDFCase.columns
+itPostsDFStruct.dtypes
 ```
 
 ```python
-**itPostsDFCase**.columns
+itPostsDFCase.columns
 itPostsDFStruct.dtypes
 ```
 
@@ -470,22 +470,22 @@ itPostsDFStruct.dtypes
     - 컬럼 이름 또는 Column객체를 하나 받고 이  컬럼을 제외한 DataFrame을 반환
 
 ```scala
-val **postsDf** = **itPostsDFStruct**
-val postsIdBody = **postsDf**.**select**("id", "body")
-// **select함수**는 **여러 칼럼 이름 또는 Column객체를 받고 
-// 이 칼럼만으로 구성된 새로운 DataFrame을 반환**
+val postsDf = itPostsDFStruct
+val postsIdBody = postsDf.select("id", "body")
+// select함수는 여러 칼럼 이름 또는 Column객체를 받고 
+// 이 칼럼만으로 구성된 새로운 DataFrame을 반환
 
-val postsIdBody = postsDf.**select**(**postsDf**.**col**("id"), **postsDf**.**col**("body"))
+val postsIdBody = postsDf.select(postsDf.col("id"), postsDf.col("body"))
 // internining
 
 // 아래 두 줄은 같은 결과 반환
-val postsIdBody = postsDf.**select**(**Symbol**("id"), **Symbol**("body"))
-val postsIdBody = postsDf.**select**('id, 'body)
+val postsIdBody = postsDf.select(Symbol("id"), Symbol("body"))
+val postsIdBody = postsDf.select('id, 'body)
 
-val postsIdBody = postsDf.**select**(**$**"id", **$**"body")
-// == val postsIdBody = postsDf.**select**('id, 'body)
+val postsIdBody = postsDf.select($"id", $body")
+// == val postsIdBody = postsDf.select('id, 'body)
 
-val postIds = postsIdBody.**drop**("body")
+val postIds = postsIdBody.drop("body")
 // 컬럼 1개 제외하고 나머지 컬럼 반환
 ```
 
@@ -510,22 +510,22 @@ postIds = postsIdBody.**drop**("body")
     - 
 
 ```scala
-**postsIdBody**.**filter**('body contains "Italiano").**count**()
+postsIdBody.filter('body contains "Italiano").count()
 // body필드에 Italiano라는 단어를 포함하는 포스트 갯수를 집계
 
-val noAnswer = **postsDf**.**filter**(('postTypeId === 1) and ('acceptedAnswerId **isNull**))
+val noAnswer = postsDf.filter(('postTypeId === 1) and ('acceptedAnswerId isNull))
 // 채택된 답변이 없는 질문만 남도록 필터링
 // 채택된 답변 ID를 기준으로 필터링 여부를 판단
-// 두 Column객체를 and 연산자로 병합해 세번쨰 Column객체 **noAnswer** 생성 
+// 두 Column객체를 and 연산자로 병합해 세번쨰 Column객체 noAnswer 생성 
 
-val firstTenQs = postsDf.filter('postTypeId === 1).**limit**(**10**)
+val firstTenQs = postsDf.filter('postTypeId === 1).limit(10)
 // DataFrame의 상위 n개 row를 선택할수 있다.
 ```
 
 ```python
 from pyspark.sql.functions import *
 
-postsIdBody.**filter**(**instr**(postsIdBody["body"], "Italiano") > 0).count()
+postsIdBody.filter(instr(postsIdBody["body"], "Italiano") > 0).count()
 
 noAnswer = postsDf.filter((postsDf["postTypeId"] == 1) & isnull(postsDf["acceptedAnswerId"]))
 ```
@@ -535,16 +535,16 @@ noAnswer = postsDf.filter((postsDf["postTypeId"] == 1) & isnull(postsDf["accepte
 ---
 
 - 기존 컬럼 이름을 더 짧게 또는 명확하게 변경할때 주로 사용
-- **withColumnRenamed** 함수사용
+- withColumnRenamed 함수사용
     - 변경할 컬럼 이름과 새로운 이름을 문자열로 전달한다.
 - 예시
-    - **점수당 조회수** 지표
+    - 점수당 조회수 지표
         - 1점 받으려면 포스트 조회수가 얼마나 올라야할지(Stack Exchange 데이터 사용)
         - 기준치보다 낮은 질문은 어떤것이 있는지 분석하는 상황
         - 35라는 기준치 적용한 케이스
 
 ```scala
-val firstTenQsRn = firstTenQs.**withColumnRenamed**("**ownerUserId**", "owner")
+val firstTenQsRn = firstTenQs.withColumnRenamed("ownerUserId", "owner")
 // firstTenQsRn = firstTenQs.withColumnRenamed("변경할칼럼 이름", "새로운 이름")
 
 postsDf.filter('postTypeId === 1).withColumn("ratio", 'viewCount / 'score).where('ratio < 35).show()
@@ -553,7 +553,7 @@ postsDf.filter('postTypeId === 1).withColumn("ratio", 'viewCount / 'score).where
 ```python
 firstTenQsRn = firstTenQs.**withColumnRenamed**("ownerUserId", "owner")
 
-**postsDf**.filter(postsDf.postTypeId == 1).**withColumn**("ratio", **postsDf**.**viewCount** / postsDf.score).**where**("ratio < 35").show()
+postsDf.filter(postsDf.postTypeId == 1).withColumn("ratio", postsDf.viewCount / postsDf.score).where("ratio < 35").show()
 #+------------+--------------------+-----------+--------------------+-----+--------------------+---------+-----+--------------------+-----------+----------------+----------+----+-------------------+
 #|commentCount|    lastActivityDate|ownerUserId|                body|score|        creationDate|viewCount|title|                tags|answerCount|acceptedAnswerId|postTypeId|  id|              ratio|
 #+------------+--------------------+-----------+--------------------+-----+--------------------+---------+-----+--------------------+-----------+----------------+----------+----+-------------------+
@@ -633,18 +633,18 @@ postsDf.filter(postsDf.postTypeId == 1).orderBy(postsDf.lastActivityDate.desc())
 **import org.apache.spark.sql.functions._
 // 집계함수는 위 객체에 있다. 모든 SQL함수를 한번에 가져올 수 있다.**
 
-postsDf.**filter**('postTypeId === 1).**withColumn**("**activePeriod**", **datediff**('lastActivityDate, 'creationDate)).**orderBy**('activePeriod desc).**head**.**getString**(3).**replace**("&lt;","<").**replace**("&gt;",">")
+postsDf.filter('postTypeId === 1).withColumn("activePeriod", datediff('lastActivityDate, 'creationDate)).orderBy('activePeriod desc).head.getString(3).replace("&lt;","<").replace("&gt;",">")
 //res0: String = <p>The plural of <em>braccio</em> is <em>braccia</em>, and the plural of <em>avambraccio</em> is <em>avambracci</em>.</p><p>Why are the plural of those words so different, if they both are referring to parts of the human body, and <em>avambraccio</em> derives from <em>braccio</em>?</p>
 
-postsDf.**select**(**avg**('score), **max**('score), **count**('score)).**show**
+postsDf.select(avg('score), max('score), count('score)).show
 ```
 
 ```python
-from **pyspark**.**sql**.functions import *
-postsDf.**filter**(**postsDf**.postTypeId == 1).**withColumn**("**activePeriod**", **datediff**(postsDf.lastActivityDate, postsDf.creationDate)).**orderBy**(desc("activePeriod")).**head**().body.replace("&lt;","<").**replace**("&gt;",">")
+from pyspark.sql.functions import *
+postsDf.filter(postsDf.postTypeId == 1).withColumn("activePeriod", datediff(postsDf.lastActivityDate, postsDf.creationDate)).orderBy(desc("activePeriod")).head().body.replace("&lt;","<").replace("&gt;",">")
 #<p>The plural of <em>braccio</em> is <em>braccia</em>, and the plural of <em>avambraccio</em> is <em>avambracci</em>.</p><p>Why are the plural of those words so different, if they both are referring to parts of the human body, and <em>avambraccio</em> derives from <em>braccio</em>?</p>
 
-postsDf.**select**(**avg**(postsDf.score), **max**(postsDf.score), **count**(postsDf.score)).**show**()
+postsDf.select(avg(postsDf.score), max(postsDf.score), count(postsDf.score)).show()
 ```
 
 ![Untitled](ch5_spark_with_SQL/Untitled.png)
@@ -1028,9 +1028,9 @@ postsDfNew.groupBy(postsDfNew.ownerUserId).agg(max(postsDfNew.lastActivityDate),
 - groupBy 이용 작성자, 관련태그, 포스트 유형별 포스트 갯수 파악
 
 ```scala
-val **smplDf** = **postsDfNew**.**where**('ownerUserId >= 13 and 'ownerUserId <= 15)
+val smplDf = postsDfNew.where('ownerUserId >= 13 and 'ownerUserId <= 15)
 
-**smplDf**.**groupBy**('ownerUserId, 'tags, 'postTypeId).**count**.show()
+smplDf.groupBy('ownerUserId, 'tags, 'postTypeId).**count**.show()
 ```
 
 ```python
