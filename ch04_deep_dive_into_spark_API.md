@@ -64,7 +64,7 @@
     transByCust.countByKey()
     
     ---output---
-    Map(67->7m 88-> 5, ...)
+    Map(67->7, 88-> 5, ...)
     transByCust.countByKey().values.sum
     ```
 
@@ -213,11 +213,12 @@
 
 
 
-## 4.2 데이터 파이셔닝을 이해하고 데이터 셔플링 최소화
+## 4.2 데이터 파티셔닝을 이해하고 데이터 셔플링 최소화
 
 * **스파크 클러스터**
+  
   * 병렬 연산이 가능하고 네트워크로 연결된 노드의 집합
-
+  
 * **데이터 파티셔닝** 
 
   * 데이터를 여러 클러스터 노드로 분할하는 메커니즘
@@ -230,13 +231,15 @@
 
   * RDD에 변환 연산을 실행할 태스크 개수와 직결되기 때문에 파티션 개수는 매우 중요
     * 클러스터의 코어 개수보다 **서너 배** 더 많은 파티션을 사용하는것이 좋다.
+    
+      
 
 
 
 ### 4.2.1 스파크의 데이터 Partitioner
 
 * RDD의 데이터 파티셔닝은 RDD 의 각 요소에 파티션 번호를 할당하는 Partitioner 객체가 수행
-* Partitioner 의 구현체로 4개가 있다.
+* Partitioner 의 구현체로 3개가 있다.
   * HashPartitioner
   * RangePartitioner
 
@@ -252,8 +255,6 @@
 
 * **정렬된 RDD** 의 데이터를 거의 같은 범위 간격으로 분할 가능하다.
 * 하지만 직접 사용할 일은 거의 없다고 한다.
-
-
 
 #### 4.2.1.3 Pair RDD의 사용자 정의 Partitioner
 
@@ -599,7 +600,7 @@ rdd.aggregateByKey(zeroValue, new CustomPartitioner())(seqFunc, comboFunc).colle
 
 * 여러 파티션을 결합하는 변환 연산자
 
-* 모든 RDD 는 파티션 갯수가 동일해야 하지만, 파티션에 포함된 요소 개수가 같을 필요는 없다.
+* 모든 RDD 는 **파티션 갯수가 동일**해야 하지만, 파티션에 **포함된 요소 개수가 같을 필요는 없다**.
 
 * `zipPartitions` 는 인자 목록을 2개 받음
 
@@ -739,9 +740,9 @@ rdd.aggregateByKey(zeroValue, new CustomPartitioner())(seqFunc, comboFunc).colle
 
  ```tex
   (A, 1)
-  (A, 2)						(A, (1,2))
+  (A, 2)						 (A, (1,2))
   (B, 1)        =>  (B, (1,3))    
-  (B, 3)						(C, (1))
+  (B, 3)						 (C, (1))
   (C, 1)
  ```
 
@@ -909,10 +910,10 @@ rdd.aggregateByKey(zeroValue, new CustomPartitioner())(seqFunc, comboFunc).colle
 
 * 누적변수
   * 여러 실행자가 공유하는 변수
-  * 스파크 프로그램의 전역상태를 유지
+  * 스파크 프로그램의 **전역상태**를 유지
   * 더하는 연산만 허용
 * 공유 변수
-  * 클러스터 노드가 공동으로 사용할 수 있는 변수
+  * **클러스터 노드가 공동**으로 사용할 수 있는 변수
   * 태스크 및 파티션이 공통으로 사용하는 데이터를 공유
 
 
@@ -926,14 +927,14 @@ rdd.aggregateByKey(zeroValue, new CustomPartitioner())(seqFunc, comboFunc).colle
 * 누적변수 값은 오직 드라이버만 참조 할 수 있다.(실행자가 누적변수 값에 접근하면 예외가 발생한다.)
 
 ```scala
-val acc = sc.accumulator(0, "acc name")
-val list = sc.parallelize(1 to 1000000)
-list.foreach(x => acc.add(1)) //실행자에서 수행하는 코드
-acc.value // 드라이버에서 수행하는 코드
+scala > val acc = sc.accumulator(0, "acc name")
+scala > val list = sc.parallelize(1 to 1000000)
+scala > list.foreach(x => acc.add(1)) //실행자에서 수행하는 코드
+scala > acc.value // 드라이버에서 수행하는 코드
 ---output---
 res0:Int = 1000000
 
-list.foreach(x=>acc.value) //예외발생
+scala > list.foreach(x=>acc.value) //예외발생
 
 ```
 
@@ -1046,8 +1047,8 @@ list.foreach(x=>acc.value) //예외발생
 * `RDD` 의 테이터를 정렬하는데 `sortByKey` , `sortBy` , `repartitionAndSortWithPartition` 이있다.
 * 스파크에서는 다양한  `Pair RDD` 변환 연산자로 데이터를 그루핑 할 수 있다.
 * RDD 계보는 DAG 로 표현한다.
-* 스파크는 셔플링이 발생하는 지점을 기준으로 스파크 잡 하나를  stage 여럿으로 나눈다.
-* 체크포인팅으 `RDD` 계보를 저장할 수 있다.
+* 스파크는 **셔플링이 발생하는 지점**을 기준으로 스파크 잡 하나를  stage 여럿으로 나눈다.
+* 체크포인팅을 `RDD` 계보를 저장할 수 있다.
 * 누적 변수로 스파크 프로그램을 **전역 상태**로 유지할  수 있다.
 * 공유 변수로 태스크 및 파티션이 공통으로 사용하는 데이터를 공유할 수 있다. 
 
@@ -1066,7 +1067,6 @@ list.foreach(x=>acc.value) //예외발생
     												// data를 8개의 파티션으로 나눔
     ```
   
-
 * Trait 이란?
 
   * `Java` 의 인터페이스와 비슷하다.
@@ -1146,4 +1146,6 @@ list.foreach(x=>acc.value) //예외발생
 
         
 
-        
+   * Spark vs SQL
+
+         * 
